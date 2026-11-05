@@ -251,3 +251,6 @@ button.toplink { font: inherit; font-size: .88rem; font-weight: 500; cursor: poi
 .quote h3 { margin: 0 0 6px; }
 .quote p, .quote li { color: var(--muted); font-size: 1.02rem; }
 a.btn { text-decoration: none; }
+
+/* símbolo da SKYPRO no cabeçalho */
+.brand-mark { display: block; height: 28px; width: auto; flex: none; }
