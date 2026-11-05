@@ -14,6 +14,7 @@ const show = (id) => {
   for (const s of ['login', 'quiz', 'done']) $(s).classList.toggle('hidden', s !== id);
   $('progress').classList.toggle('hidden', id !== 'quiz');
   $('adminLink').classList.toggle('hidden', id !== 'login');
+  $('exitBtn').classList.toggle('hidden', id !== 'done');
 };
 const initials = (n) => n.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 
@@ -49,9 +50,15 @@ function renderPeople() {
     const av = document.createElement('span'); av.className = 'avatar'; av.textContent = initials(n);
     const tx = document.createElement('span'); const nm = document.createElement('b'); nm.textContent = n; tx.append(nm);
     b.append(av, tx);
+    const isDone = group.done?.includes(n);
+    if (isDone) {
+      b.disabled = true; b.classList.add('is-done'); b.setAttribute('aria-checked', 'false');
+      const sb = document.createElement('span'); sb.className = 'sub'; sb.textContent = '✓ Já respondeu'; tx.append(sb);
+    }
     b.onclick = () => { person = n; renderPeople(); };
     return b;
   }));
+  $('doneHint').classList.toggle('hidden', !(group?.done?.length));
   $('go').disabled = !(group && person);
 }
 
@@ -105,7 +112,10 @@ function render(s) {
     $('goal').value = s.goal || pr?.objetivo || '';
     $('req').value = s.request || '';
     setReq(Boolean(s.request));
-    $('followMsg').textContent = s.request || s.goal ? '✓ Guardado' : '';
+    saved = { goal: s.goal || '', req: s.request || '' };
+    hasSaved = Boolean(s.goal || s.request);
+    editing = false;
+    syncFollow();
     return;
   }
   show('quiz');
@@ -165,6 +175,7 @@ async function init() {
   if (sessionId) {
     try { return render(await api('/api/session?id=' + encodeURIComponent(sessionId))); } catch { /* sessão antiga */ }
   }
+  try { if (sessionStorage.getItem('aiia_notice')) { $('doneNotice').classList.remove('hidden'); sessionStorage.removeItem('aiia_notice'); } } catch { /* ignore */ }
   $('gate').classList.toggle('hidden', !config.needsCode);
   $('picker').classList.toggle('hidden', config.needsCode);
   if (!config.needsCode) {
@@ -184,7 +195,7 @@ $('code').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('gateBtn
 $('search').addEventListener('input', renderPeople);
 $('go').onclick = async () => {
   $('loginErr').textContent = ''; $('go').disabled = true;
-  try { render(await api('/api/start', { group: group.name, name: person, code: $('code').value })); }
+  try { render(await api('/api/start', { group: group.name, name: person, code: $('code').value, id: sessionId })); }
   catch (e) { $('loginErr').textContent = e.message; $('go').disabled = false; }
 };
 $('send').onclick = submit;
@@ -205,14 +216,41 @@ function setReq(open) {
 }
 $('reqToggle').onclick = () => { setReq(true); $('req').focus(); };
 
+let saved = { goal: '', req: '' }, hasSaved = false, editing = false;
+function syncFollow() {
+  const locked = hasSaved && !editing;
+  const dirty = $('goal').value.trim() !== saved.goal || $('req').value.trim() !== saved.req;
+  const btn = $('followBtn');
+  $('goal').disabled = locked; $('req').disabled = locked; $('reqToggle').disabled = locked;
+  $('follow').classList.toggle('locked', locked);
+  btn.classList.toggle('ghost', locked);
+  btn.type = locked ? 'button' : 'submit';
+  btn.disabled = !locked && hasSaved && !dirty;
+  btn.textContent = locked ? 'Editar' : hasSaved ? 'Guardar alterações' : 'Guardar';
+  $('cancelEdit').classList.toggle('hidden', !(hasSaved && editing));
+  $('followMsg').textContent = locked ? '✓ Guardado' + (saved.req ? ' · O teu mentor já pode ver o teu pedido.' : '') : '';
+}
+$('goal').addEventListener('input', syncFollow);
+$('req').addEventListener('input', syncFollow);
+$('followBtn').addEventListener('click', () => {
+  if (hasSaved && !editing) { editing = true; syncFollow(); $('goal').focus(); }
+});
+$('cancelEdit').onclick = () => { $('goal').value = saved.goal; $('req').value = saved.req; setReq(Boolean(saved.req)); editing = false; syncFollow(); };
+
 $('follow').addEventListener('submit', async (e) => {
   e.preventDefault();
-  $('followErr').textContent = ''; $('followMsg').textContent = ''; $('followBtn').disabled = true;
+  $('followErr').textContent = ''; $('followBtn').disabled = true; $('followBtn').textContent = 'A guardar…';
   try {
     const v = await api('/api/followup', { id: sessionId, goal: $('goal').value.trim(), request: $('req').value.trim() });
-    $('followMsg').textContent = v.request ? '✓ Guardado. O teu mentor vai ver o teu pedido.' : '✓ Guardado.';
+    saved = { goal: v.goal || '', req: v.request || '' };
+    hasSaved = true; editing = false;
   } catch (err) { $('followErr').textContent = err.message; }
-  $('followBtn').disabled = false;
+  syncFollow();
 });
+
+$('exitBtn').onclick = () => {
+  try { localStorage.removeItem('aiia_session'); sessionStorage.setItem('aiia_notice', '1'); } catch { /* ignore */ }
+  location.reload();
+};
 
 init();

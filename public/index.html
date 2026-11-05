@@ -15,6 +15,7 @@
   <header class="topbar">
     <div class="brand"><span class="logo" aria-hidden="true"></span>Mentoria em IA <em>· pré-sessão</em></div>
     <div class="progress hidden" id="progress" aria-live="polite"></div>
+    <button class="toplink hidden" id="exitBtn" type="button">Sair</button>
     <a class="toplink" id="adminLink" href="/admin">Painel de controlo
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
   </header>
@@ -26,9 +27,11 @@
       <h1 class="display">Vamos conhecer o <em>teu dia a dia.</em></h1>
       <p class="lede">Cerca de cinco minutos de conversa para o teu mentor preparar uma sessão feita à tua medida. Não há respostas certas ou erradas.</p>
 
+      <p class="notice hidden" id="doneNotice" role="status">✓ As tuas respostas já estão guardadas. Obrigado! Se precisares de alterar alguma coisa, fala com o teu mentor.</p>
+
       <div id="gate" class="hidden">
         <p class="label">Código de convite</p>
-        <input id="code" class="field" type="password" autocomplete="off" placeholder="Fornecido pelo teu mentor" aria-label="Código de convite">
+        <div class="pwwrap"><input id="code" class="field" type="password" autocomplete="off" placeholder="Fornecido pelo teu mentor" aria-label="Código de convite"><button class="eye" type="button" aria-label="Mostrar" aria-pressed="false" title="Mostrar / esconder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="slash" d="M4 4l16 16"/></svg></button></div>
         <div class="cta">
           <button id="gateBtn" class="btn" type="button">Continuar
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
@@ -44,6 +47,7 @@
         <p class="label" id="whoLabel"><span class="num">2</span> Quem és tu?</p>
         <input id="search" class="search hidden" type="search" placeholder="Procurar o teu nome…" autocomplete="off" aria-label="Procurar o teu nome">
         <div class="people" id="people" role="radiogroup" aria-labelledby="whoLabel"></div>
+        <p class="small hidden" id="doneHint" style="margin-top:12px">Os nomes marcados com ✓ já responderam. Se precisares de alterar algo, fala com o teu mentor.</p>
       </div>
 
       <div class="cta">
@@ -109,6 +113,7 @@
           </section>
           <div class="cta">
             <button class="btn" id="followBtn" type="submit">Guardar</button>
+            <button class="linkbtn hidden" id="cancelEdit" type="button">Cancelar</button>
             <span id="followMsg" class="small" role="status"></span>
           </div>
           <div id="followErr" class="err" role="alert"></div>
@@ -117,6 +122,7 @@
     </section>
   </main>
 </div>
+<script src="/eye.js"></script>
 <script src="/app.js"></script>
 </body>
 </html>

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="noindex">
+<title>Check-in semanal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <div class="brand"><span class="logo" aria-hidden="true"></span>Mentoria em IA <em>· check-in semanal</em></div>
+    <a class="toplink" href="/">Início</a>
+  </header>
+
+  <main class="stage-wrap">
+    <section id="ckError" class="screen hidden">
+      <h1 class="display">Este link não <em>funciona.</em></h1>
+      <p class="lede" id="ckErrorText">Pede ao teu mentor o teu link pessoal de check-in.</p>
+      <div class="cta"><a class="btn ghost" href="/">Ir para o início</a></div>
+    </section>
+
+    <section id="ck" class="screen twocol hidden">
+      <div class="col-a">
+        <p class="eyebrow" id="ckWeek">Check-in semanal</p>
+        <h1 class="display" id="ckTitle">Olá.</h1>
+        <p class="lede" id="ckLede">Três linhas bastam. Preenche até quinta às 17h, para o teu mentor preparar a sessão de sexta.</p>
+        <div class="quote hidden" id="ckGoalBox"><h3>O teu objetivo para o ano</h3><p id="ckGoal"></p></div>
+        <div class="quote hidden" id="ckRecentBox"><h3>As tuas últimas semanas</h3><ul class="tight" id="ckRecent"></ul></div>
+      </div>
+
+      <form class="panel" id="ckForm">
+        <section class="blk try hidden" id="ckCommit">
+          <h3>O teu compromisso da última sessão</h3>
+          <p class="strong" id="ckCommitText"></p>
+        </section>
+        <section class="blk">
+          <label for="did">1. O que fiz desde a última sessão</label>
+          <textarea id="did" class="field" rows="3" maxlength="1000" placeholder="Pequenas vitórias, coisas que experimentei, o que aprendi…"></textarea>
+        </section>
+        <section class="blk">
+          <label for="next">2. O que quero avançar na próxima sessão</label>
+          <textarea id="next" class="field" rows="3" maxlength="1000" placeholder="O que gostava de ter feito até sexta…"></textarea>
+        </section>
+        <section class="blk">
+          <label for="blocked">3. Onde estou bloqueado/a <span class="small">· opcional</span></label>
+          <textarea id="blocked" class="field" rows="2" maxlength="1000" placeholder="Uma dúvida, falta de acesso, um processo confuso…"></textarea>
+        </section>
+        <div class="cta">
+          <button class="btn" id="ckBtn" type="submit">Guardar</button>
+          <button class="linkbtn hidden" id="ckCancel" type="button">Cancelar</button>
+          <span id="ckMsg" class="small" role="status"></span>
+        </div>
+        <div id="ckErr" class="err" role="alert"></div>
+      </form>
+    </section>
+  </main>
+</div>
+<script src="/week.js"></script>
+<script src="/checkin.js"></script>
+</body>
+</html>

@@ -9,44 +9,61 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap">
 <link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/admin.css">
 </head>
 <body>
 <main class="wrap wide">
-  <a class="backlink" href="/">← Voltar ao questionário</a>
-  <h1>Painel do mentor</h1>
-  <p class="sub" id="who">Respostas e perfis do teu grupo.</p>
+  <header class="ahead">
+    <div class="ahead-l">
+      <h1>Painel do mentor</h1>
+      <p class="sub" id="who">Respostas e perfis do teu grupo.</p>
+    </div>
+    <div class="ahead-r">
+      <div class="row hidden" id="actions">
+        <button id="refresh" type="button">Atualizar</button>
+        <button id="csv" type="button">Exportar CSV</button>
+        <button id="logout" type="button">Sair</button>
+      </div>
+      <a class="backlink" href="/">← Questionário</a>
+    </div>
+  </header>
 
   <section id="login" class="card">
     <label>Grupo</label>
     <div class="gpills big" id="gpick" role="radiogroup" aria-label="Grupo"></div>
     <label for="pw">Palavra-passe do grupo</label>
     <div class="loginrow">
-      <input id="pw" type="password" autocomplete="current-password" placeholder="Introduz a palavra-passe do teu grupo">
+      <div class="pwwrap"><input id="pw" type="password" autocomplete="current-password" placeholder="Introduz a palavra-passe do teu grupo"><button class="eye" type="button" aria-label="Mostrar" aria-pressed="false" title="Mostrar / esconder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="slash" d="M4 4l16 16"/></svg></button></div>
       <button id="enter" class="primary">Entrar</button>
     </div>
     <div id="loginErr" class="err" role="alert"></div>
   </section>
 
   <section id="panel" class="hidden">
-    <div class="gpills hidden" id="filter" role="radiogroup" aria-label="Filtrar por grupo"></div>
-    <div class="stat" id="stats"></div>
-    <div class="row" style="margin-bottom:12px">
-      <button id="refresh">Atualizar</button>
-      <button id="csv">Exportar CSV</button>
-      <button id="logout">Sair</button>
+    <div class="gbar hidden" id="filterBar">
+      <span class="gl" id="gl">Grupo</span>
+      <div class="gpills" id="filter" role="radiogroup" aria-labelledby="gl"></div>
     </div>
-    <div class="grid">
-      <div class="card" style="overflow-x:auto">
-        <table>
-          <thead><tr><th>Pessoa</th><th>Área</th><th>Estado</th><th>IA</th></tr></thead>
-          <tbody id="rows"></tbody>
-        </table>
-        <div id="missing" class="small" style="margin-top:12px"></div>
+    <div class="tabs" id="mainTabs" role="tablist" aria-label="Vistas do painel"></div>
+
+    <div id="vTeam" role="tabpanel">
+      <details class="kpis" id="kpis" open>
+        <summary>Indicadores do programa <span class="kpiweek" id="kpiWeek"></span></summary>
+        <div class="metrics" id="metrics"></div>
+      </details>
+      <div class="split">
+        <div class="list" id="list" aria-label="Pessoas"></div>
+        <div class="card detail" id="detail"><p class="small">Seleciona uma pessoa.</p></div>
       </div>
-      <div class="card" id="detail"><p class="small">Seleciona uma pessoa.</p></div>
     </div>
+
+    <div id="vLib" class="hidden" role="tabpanel"></div>
+    <div id="vSession" class="hidden" role="tabpanel"></div>
   </section>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </main>
+<script src="/eye.js"></script>
+<script src="/week.js"></script>
 <script src="/admin.js"></script>
 </body>
 </html>
