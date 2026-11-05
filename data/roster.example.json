@@ -1,5 +1,12 @@
 {
   "groups": [
-    { "name": "Grupo A", "mentor": "Nome do mentor", "members": ["Pessoa 1", "Pessoa 2"] }
+    {
+      "name": "Grupo A",
+      "mentor": "Nome do mentor",
+      "members": [
+        "Pessoa 1",
+        "Pessoa 2"
+      ]
+    }
   ]
 }

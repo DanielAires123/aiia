@@ -144,16 +144,33 @@ async function submit() {
 }
 
 /* ---------- Arranque ---------- */
+async function loadRoster(code) {
+  const r = await api('/api/roster', { code });
+  config.groups = r.groups; group = null; person = null;
+  renderGroups(); renderPeople();
+}
+
 async function init() {
   try { config = await api('/api/config'); }
   catch (e) { $('loginErr').textContent = e.message; return; }
-  renderGroups(); renderPeople();
-  $('codeRow').classList.toggle('hidden', !config.needsCode);
   if (sessionId) {
     try { return render(await api('/api/session?id=' + encodeURIComponent(sessionId))); } catch { /* sessão antiga */ }
   }
+  $('gate').classList.toggle('hidden', !config.needsCode);
+  $('picker').classList.toggle('hidden', config.needsCode);
+  if (!config.needsCode) {
+    try { await loadRoster(''); } catch (e) { $('loginErr').textContent = e.message; }
+  }
   show('login');
 }
+
+$('gateBtn').onclick = async () => {
+  $('gateErr').textContent = ''; $('gateBtn').disabled = true;
+  try { await loadRoster($('code').value); $('gate').classList.add('hidden'); $('picker').classList.remove('hidden'); }
+  catch (e) { $('gateErr').textContent = e.message; }
+  $('gateBtn').disabled = false;
+};
+$('code').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('gateBtn').click(); });
 
 $('search').addEventListener('input', renderPeople);
 $('go').onclick = async () => {

@@ -24,6 +24,17 @@
       <h1 class="display">Vamos conhecer o <em>teu dia a dia.</em></h1>
       <p class="lede">Cerca de cinco minutos de conversa para o teu mentor preparar uma sessão feita à tua medida. Não há respostas certas ou erradas.</p>
 
+      <div id="gate" class="hidden">
+        <p class="label">Código de convite</p>
+        <input id="code" class="field" type="password" autocomplete="off" placeholder="Fornecido pelo teu mentor" aria-label="Código de convite">
+        <div class="cta">
+          <button id="gateBtn" class="btn" type="button">Continuar
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        </div>
+        <div id="gateErr" class="err" role="alert"></div>
+      </div>
+
+      <div id="picker">
       <p class="label"><span class="num">1</span> Qual é o teu grupo?</p>
       <div class="people" id="groupPick" role="radiogroup" aria-label="Grupo"></div>
 
@@ -33,9 +44,6 @@
         <div class="people" id="people" role="radiogroup" aria-labelledby="whoLabel"></div>
       </div>
 
-      <div id="codeRow" class="hidden">
-        <p class="label">Código de convite</p>
-        <input id="code" class="field" type="password" autocomplete="off" placeholder="Fornecido pelo teu mentor" aria-label="Código de convite">
       </div>
 
       <div class="cta">

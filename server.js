@@ -29,17 +29,68 @@ const ROSTER_FILE = path.join(DATA_DIR, 'roster.json');
 
 // ---------- armazenamento (JSON em disco, escrita atómica) ----------
 let db = { sessions: {} };
-try { db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); } catch { /* novo */ }
-let writing = Promise.resolve();
-function save() {
-  writing = writing.then(async () => {
-    const tmp = DB_FILE + '.tmp';
-    await fsp.writeFile(tmp, JSON.stringify(db, null, 2));
-    await fsp.rename(tmp, DB_FILE);
-  }).catch((e) => console.error('Erro a gravar:', e.message));
-  return writing;
+
+// Com SUPABASE_URL + SUPABASE_SERVICE_KEY as respostas ficam no Supabase (sobrevivem a deploys/reinícios).
+// Sem elas, usa-se o ficheiro data/responses.json (desenvolvimento local).
+const SB_URL = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
+const SB_KEY = process.env.SUPABASE_SERVICE_KEY || '';
+const useSupabase = Boolean(SB_URL && SB_KEY);
+const sbFetch = (p, opts = {}) => fetch(`${SB_URL}/rest/v1/${p}`, {
+  ...opts, signal: AbortSignal.timeout(15_000),
+  headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', ...(opts.headers || {}) },
+});
+
+const pendingWrites = new Map();   // id -> sessão a gravar, ou null para apagar
+let flushing = null;
+async function flush() {
+  if (flushing) return flushing;
+  flushing = (async () => {
+    try {
+      if (!useSupabase) {
+        await fsp.mkdir(DATA_DIR, { recursive: true });
+        const tmp = DB_FILE + '.tmp';
+        await fsp.writeFile(tmp, JSON.stringify(db, null, 2));
+        await fsp.rename(tmp, DB_FILE);
+        pendingWrites.clear();
+        return;
+      }
+      for (const [id, sess] of [...pendingWrites]) {
+        const res = sess
+          ? await sbFetch('sessions?on_conflict=id', {
+              method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+              body: JSON.stringify({ id, grp: sess.group, name: sess.name, status: sess.status, data: sess, updated_at: sess.updatedAt }),
+            })
+          : await sbFetch(`sessions?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error(`Supabase ${res.status}: ${(await res.text()).slice(0, 200)}`);
+        if (pendingWrites.get(id) === sess) pendingWrites.delete(id);   // só limpa se não houve alteração entretanto
+      }
+    } catch (e) {
+      console.error('Erro a gravar (fica em fila e tenta de novo):', e.message);
+    } finally { flushing = null; }
+  })();
+  return flushing;
 }
-const readRoster = () => JSON.parse(fs.readFileSync(ROSTER_FILE, 'utf8'));
+const save = (sess) => { pendingWrites.set(sess.id, sess); return flush(); };
+const removeSession = (id) => { pendingWrites.set(id, null); return flush(); };
+setInterval(() => { if (pendingWrites.size) flush(); }, 15_000).unref();
+for (const sig of ['SIGTERM', 'SIGINT']) process.on(sig, async () => { await flush(); process.exit(0); });
+
+if (useSupabase) {
+  const res = await sbFetch('sessions?select=data&limit=5000');
+  if (!res.ok) { console.error('Não consegui ler do Supabase:', res.status, await res.text()); process.exit(1); }
+  for (const row of await res.json()) db.sessions[row.data.id] = row.data;
+  console.log(`Supabase: ${Object.keys(db.sessions).length} sessões carregadas.`);
+} else {
+  try { db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); } catch { /* novo */ }
+  console.log('Armazenamento: ficheiro local (define SUPABASE_URL e SUPABASE_SERVICE_KEY para usar o Supabase).');
+}
+// O roster tem nomes de pessoas: não vai para o repositório. Em produção usa a variável ROSTER_JSON
+// (JSON numa linha); em local, o ficheiro data/roster.json (ver data/roster.example.json).
+let rosterCache = null;
+const readRoster = () => {
+  if (!rosterCache) rosterCache = JSON.parse(process.env.ROSTER_JSON || fs.readFileSync(ROSTER_FILE, 'utf8'));
+  return structuredClone(rosterCache);
+};
 
 // ---------- Groq ----------
 // Vários modelos em alternativa: na Groq cada modelo tem o seu próprio limite (pedidos/min e tokens/min),
@@ -88,8 +139,8 @@ async function groq(messages, { temperature = 0.5, max_tokens = 800 } = {}) {
       }
       if (!res.ok) {
         console.error('Groq', res.status, model, (await res.text()).slice(0, 300));
-        // modelo indisponível/incompatível: evita-o durante 10 min; erros 5xx: 10 s
-        blockedUntil.set(model, Date.now() + (res.status >= 500 ? 10_000 : 600_000));
+        // 5xx: 10 s; 400 (ex.: JSON mal gerado): 30 s; 401/403/404 (modelo/chave inválidos): 10 min
+        blockedUntil.set(model, Date.now() + (res.status >= 500 ? 10_000 : res.status === 400 ? 30_000 : 600_000));
         if (MODELS.every((m) => (blockedUntil.get(m) || 0) > Date.now() + 5_000) || Date.now() > deadline)
           throw new HttpError(502, 'O assistente de IA não está disponível agora. Tenta novamente daqui a pouco.');
         continue;
@@ -101,7 +152,7 @@ async function groq(messages, { temperature = 0.5, max_tokens = 800 } = {}) {
   } finally { release(); }
 }
 
-const CONTEXT = `Contexto: uma empresa (SKYPRO) lançou um programa anual de mentoria em IA. Cada pessoa tem um mentor e um objetivo concreto de melhoria no seu próprio trabalho. O objetivo não é "aprender IA por aprender", é reduzir tarefas repetitivas, aumentar produtividade e criar valor, sem automatizar processos mal desenhados. Há pessoas com níveis de maturidade muito diferentes; ninguém deve sentir-se avaliado ou deixado para trás.`;
+const CONTEXT = `Contexto: ${process.env.COMPANY_NAME ? 'a empresa ' + process.env.COMPANY_NAME : 'uma empresa'} lançou um programa anual de mentoria em IA. Cada pessoa tem um mentor e um objetivo concreto de melhoria no seu próprio trabalho. O objetivo não é "aprender IA por aprender", é reduzir tarefas repetitivas, aumentar produtividade e criar valor, sem automatizar processos mal desenhados. Há pessoas com níveis de maturidade muito diferentes; ninguém deve sentir-se avaliado ou deixado para trás.`;
 
 function transcript(s, { compact = false } = {}) {
   const n = s.turns.length;
@@ -302,13 +353,20 @@ async function handleApi(req, res, url) {
   const m = req.method;
 
   if (m === 'GET' && pathname === '/api/config') {
-    const roster = readRoster();
     return json(res, 200, {
       needsCode: Boolean(INVITE_CODE),
-      groups: roster.groups.map((g) => ({ name: g.name, mentor: g.mentor, members: g.members })),
+      groups: readRoster().groups.map((g) => ({ name: g.name, mentor: g.mentor })),   // sem nomes de pessoas
       adminAll: Boolean(ADMIN_PASSWORD),
       total: MAX_QUESTIONS,
     });
+  }
+
+  // Lista de pessoas: só com o código de convite (se estiver definido)
+  if (m === 'POST' && pathname === '/api/roster') {
+    rateLimit(req, 20);
+    const b = await readBody(req);
+    if (INVITE_CODE && !safeEqual(b.code || '', INVITE_CODE)) throw new HttpError(403, 'Código de convite incorreto.');
+    return json(res, 200, { groups: readRoster().groups.map((g) => ({ name: g.name, mentor: g.mentor, members: g.members })) });
   }
 
   if (m === 'POST' && pathname === '/api/start') {
@@ -334,7 +392,7 @@ async function handleApi(req, res, url) {
         }, profile: null,
       };
       db.sessions[s.id] = s;
-      await save();
+      await save(s);
     }
     return json(res, 200, publicView(s));
   }
@@ -373,7 +431,7 @@ async function handleApi(req, res, url) {
       s.pending = prev;
       throw e;
     }
-    await save();
+    await save(s);
     return json(res, 200, publicView(s));
   }
 
@@ -398,13 +456,13 @@ async function handleApi(req, res, url) {
       const s = db.sessions[mm[1]];
       if (!s || !allowed.has(s.group)) throw new HttpError(404, 'Sessão não encontrada.');
       if (m === 'DELETE' && !mm[2]) {
-        delete db.sessions[s.id]; await save();
+        delete db.sessions[s.id]; await removeSession(s.id);
         return json(res, 200, { ok: true });
       }
       if (m === 'POST' && mm[2]) {
         if (!s.turns.length) throw new HttpError(400, 'Sem respostas para resumir.');
         s.profile = await buildProfile(s);
-        await save();
+        await save(s);
         return json(res, 200, { profile: s.profile });
       }
     }
