@@ -82,19 +82,25 @@ const removeSolution = (id) => queueWrite('solutions', id, null);
 setInterval(() => { if (pendingWrites.size) flush(); }, 15_000).unref();
 for (const sig of ['SIGTERM', 'SIGINT']) process.on(sig, async () => { await flush(); process.exit(0); });
 
-if (useSupabase) {
-  const res = await sbFetch('sessions?select=data&limit=5000');
-  if (!res.ok) { console.error('Não consegui ler do Supabase:', res.status, await res.text()); process.exit(1); }
-  for (const row of await res.json()) db.sessions[row.data.id] = row.data;
-  const rs = await sbFetch('solutions?select=data&limit=5000');
-  if (rs.ok) for (const row of await rs.json()) db.solutions[row.data.id] = row.data;
-  else console.warn('AVISO: tabela "solutions" não encontrada no Supabase — a biblioteca não vai guardar até a criares.');
-  console.log(`Supabase: ${Object.keys(db.sessions).length} sessões e ${Object.keys(db.solutions).length} soluções carregadas.`);
-} else {
-  try { db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); } catch { /* novo */ }
-  db.sessions ||= {}; db.solutions ||= {};
-  console.log('Armazenamento: ficheiro local (define SUPABASE_URL e SUPABASE_SERVICE_KEY para usar o Supabase).');
-}
+// Os dados carregam em segundo plano: o servidor começa a ouvir logo (o Render só encaminha tráfego
+// quando a porta responde) e os pedidos que precisam dos dados esperam por dbReady.
+const dbReady = (async () => {
+  if (useSupabase) {
+    const res = await sbFetch('sessions?select=data&limit=5000');
+    if (!res.ok) { console.error('Não consegui ler do Supabase:', res.status, await res.text()); process.exit(1); }
+    for (const row of await res.json()) db.sessions[row.data.id] = row.data;
+    const rs = await sbFetch('solutions?select=data&limit=5000');
+    if (rs.ok) for (const row of await rs.json()) db.solutions[row.data.id] = row.data;
+    else console.warn('AVISO: tabela "solutions" não encontrada no Supabase — a biblioteca não vai guardar até a criares.');
+    console.log(`Supabase: ${Object.keys(db.sessions).length} sessões e ${Object.keys(db.solutions).length} soluções carregadas.`);
+  } else {
+    try { db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); } catch { /* novo */ }
+    db.sessions ||= {}; db.solutions ||= {};
+    console.log('Armazenamento: ficheiro local (define SUPABASE_URL e SUPABASE_SERVICE_KEY para usar o Supabase).');
+  }
+})();
+let dbLoaded = false;
+dbReady.then(() => { dbLoaded = true; });
 // O roster tem nomes de pessoas: não vai para o repositório. Em produção usa a variável ROSTER_JSON
 // (JSON numa linha); em local, o ficheiro data/roster.json (ver data/roster.example.json).
 let rosterCache = null;
@@ -422,6 +428,8 @@ async function handleApi(req, res, url) {
   const { pathname } = url;
   const m = req.method === 'HEAD' ? 'GET' : req.method;   // monitores (UptimeRobot) usam HEAD; o Node omite o corpo
 
+  if (pathname !== '/api/config') await dbReady;   // /api/config não precisa dos dados
+
   if (m === 'GET' && pathname === '/api/config') {
     return json(res, 200, {
       needsCode: Boolean(INVITE_CODE),
@@ -726,6 +734,10 @@ async function handleApi(req, res, url) {
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, 'http://localhost');
+    // Leve, sem Supabase: para o Health Check do Render e para o UptimeRobot
+    if (url.pathname === '/health' && (req.method === 'GET' || req.method === 'HEAD')) {
+      return json(res, 200, { ok: true, dataLoaded: dbLoaded });
+    }
     if (url.pathname.startsWith('/api/')) return await handleApi(req, res, url);
     if (req.method !== 'GET' && req.method !== 'HEAD') throw new HttpError(405, 'Método não permitido.');
 

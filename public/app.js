@@ -170,8 +170,17 @@ async function loadRoster(code) {
 }
 
 async function init() {
-  try { config = await api('/api/config'); }
-  catch (e) { $('loginErr').textContent = e.message; return; }
+  // O Render (plano grátis) reinicia a instância de vez em quando: durante ~1–3 min devolve 502.
+  // Em vez de mostrar erro, tenta de novo.
+  for (let i = 0; ; i++) {
+    try { config = await api('/api/config'); break; }
+    catch (e) {
+      if (i >= 12) { $('loginErr').textContent = e.message; return; }
+      $('loginErr').textContent = 'A ligar ao servidor… (pode demorar um minuto)';
+      await new Promise((r) => setTimeout(r, 5000));
+    }
+  }
+  $('loginErr').textContent = '';
   if (sessionId) {
     try { return render(await api('/api/session?id=' + encodeURIComponent(sessionId))); } catch { /* sessão antiga */ }
   }
