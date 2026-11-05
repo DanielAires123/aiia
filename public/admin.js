@@ -41,7 +41,7 @@ function renderRows() {
   $('rows').replaceChildren(...vs().map((s) => {
     const done = s.status === 'done';
     const tr = el('tr', { className: 'click' },
-      el('td', {}, el('b', { textContent: s.name }), el('br'), el('span', { className: 'small', textContent: s.group })),
+      el('td', {}, el('b', { textContent: s.name }), s.request?.status === 'novo' ? el('span', { className: 'badge req', textContent: ' Pedido' }) : null, el('br'), el('span', { className: 'small', textContent: s.group })),
       el('td', {}, el('b', { textContent: s.profile?.area || '—' }), el('br'), el('span', { className: 'small', textContent: s.profile?.resumo_curto || '' })),
       el('td', {}, el('span', { className: 'badge ' + (done ? 'ok' : 'warn'), textContent: done ? 'Concluído' : `${s.turns.length}/${data.total}` })),
       el('td', { className: 'dots', textContent: dots(s.profile?.nivel_maturidade) }));
@@ -57,6 +57,15 @@ function renderDetail() {
   if (!s) { d.replaceChildren(el('p', { className: 'small', textContent: 'Seleciona uma pessoa.' })); return; }
   const p = s.profile;
   const kids = [el('h2', { textContent: s.name }), el('div', { className: 'small', textContent: `${s.group} · atualizado ${new Date(s.updatedAt).toLocaleString('pt-PT')}` })];
+  if (s.request?.text) {
+    const done = s.request.status === 'resolvido';
+    const btn = el('button', { type: 'button', textContent: done ? 'Reabrir' : 'Marcar como resolvido' });
+    btn.onclick = async () => { btn.disabled = true; try { await api(`/api/admin/sessions/${s.id}/resolve`, 'POST'); await load(); } catch (e) { alert(e.message); } };
+    kids.push(el('div', { className: 'reqbox' + (done ? ' done' : '') },
+      el('h3', { textContent: (done ? '✅ Pedido resolvido' : '📨 Pedido para ti') + ' · ' + new Date(s.request.at).toLocaleDateString('pt-PT') }),
+      el('p', { textContent: s.request.text }), btn));
+  }
+  if (s.goal) kids.push(el('h3', { textContent: 'Objetivo do ano (como a pessoa o definiu)' }), el('p', { textContent: s.goal }));
   if (p) {
     kids.push(
       el('div', { className: 'tips' }, el('h3', { textContent: '💡 Dicas para o mentor' }), list(p.dicas_mentor),

@@ -15,6 +15,8 @@
   <header class="topbar">
     <div class="brand"><span class="logo" aria-hidden="true"></span>Mentoria em IA <em>· pré-sessão</em></div>
     <div class="progress hidden" id="progress" aria-live="polite"></div>
+    <a class="toplink" id="adminLink" href="/admin">Painel de controlo
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
   </header>
 
   <main class="stage-wrap">
@@ -44,14 +46,13 @@
         <div class="people" id="people" role="radiogroup" aria-labelledby="whoLabel"></div>
       </div>
 
-      </div>
-
       <div class="cta">
         <button id="go" class="btn" disabled>Começar
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
         <span class="small">Só o teu mentor vê as respostas.</span>
       </div>
       <div id="loginErr" class="err" role="alert"></div>
+      </div>
     </section>
 
     <!-- 2. Questionário -->
@@ -82,11 +83,37 @@
 
     <!-- 3. Fim -->
     <section id="done" class="screen hidden">
-      <div class="tick" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
-      <h2 class="display" id="doneTitle">Obrigado.</h2>
-      <p class="lede">As tuas respostas ficaram guardadas. O teu mentor vai usá-las para preparar a sessão contigo.</p>
-      <div id="mine"></div>
-      <p class="small" style="margin-top:28px">Já podes fechar esta página.</p>
+      <div class="done-a">
+        <div class="tick" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+        <h2 class="display" id="doneTitle">Obrigado.</h2>
+        <p class="lede">As tuas respostas ficaram guardadas. O teu mentor vai usá-las para preparar a sessão contigo.</p>
+        <div id="mine"></div>
+      </div>
+      <div class="done-b">
+        <form class="panel" id="follow">
+          <section class="blk try hidden" id="tryBox">
+            <h3>Para experimentar esta semana</h3>
+            <p class="strong" id="tryMain"></p>
+            <p class="muted" id="tryExtra"></p>
+          </section>
+          <section class="blk">
+            <label for="goal">O teu objetivo para o ano</label>
+            <textarea id="goal" class="field" rows="2" maxlength="400"></textarea>
+          </section>
+          <section class="blk">
+            <button class="linkbtn" id="reqToggle" type="button" aria-expanded="false">+ Tenho um pedido para o meu mentor</button>
+            <div id="reqBox" class="hidden">
+              <label for="req">O que precisas?</label>
+              <textarea id="req" class="field" rows="3" maxlength="1000" placeholder="Uma dúvida, acesso a uma ferramenta, um processo que queres analisar…"></textarea>
+            </div>
+          </section>
+          <div class="cta">
+            <button class="btn" id="followBtn" type="submit">Guardar</button>
+            <span id="followMsg" class="small" role="status"></span>
+          </div>
+          <div id="followErr" class="err" role="alert"></div>
+        </form>
+      </div>
     </section>
   </main>
 </div>

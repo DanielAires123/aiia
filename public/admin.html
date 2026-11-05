@@ -12,15 +12,18 @@
 </head>
 <body>
 <main class="wrap wide">
+  <a class="backlink" href="/">← Voltar ao questionário</a>
   <h1>Painel do mentor</h1>
   <p class="sub" id="who">Respostas e perfis do teu grupo.</p>
 
-  <section id="login" class="card" style="max-width:560px">
+  <section id="login" class="card">
     <label>Grupo</label>
-    <div class="gpills" id="gpick" role="radiogroup" aria-label="Grupo"></div>
+    <div class="gpills big" id="gpick" role="radiogroup" aria-label="Grupo"></div>
     <label for="pw">Palavra-passe do grupo</label>
-    <input id="pw" type="password" autocomplete="current-password">
-    <div class="actions"><span></span><button id="enter" class="primary">Entrar</button></div>
+    <div class="loginrow">
+      <input id="pw" type="password" autocomplete="current-password" placeholder="Introduz a palavra-passe do teu grupo">
+      <button id="enter" class="primary">Entrar</button>
+    </div>
     <div id="loginErr" class="err" role="alert"></div>
   </section>
 

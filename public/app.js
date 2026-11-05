@@ -13,6 +13,7 @@ async function api(path, body) {
 const show = (id) => {
   for (const s of ['login', 'quiz', 'done']) $(s).classList.toggle('hidden', s !== id);
   $('progress').classList.toggle('hidden', id !== 'quiz');
+  $('adminLink').classList.toggle('hidden', id !== 'login');
 };
 const initials = (n) => n.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 
@@ -91,12 +92,20 @@ function render(s) {
     show('done');
     $('doneTitle').textContent = `Obrigado, ${s.name.split(' ')[0]}.`;
     const box = $('mine'); box.replaceChildren();
-    if (s.profile?.resumo) {
+    const pr = s.profile;
+    if (pr?.resumo) {
       const w = document.createElement('div'); w.className = 'summary';
       const h = document.createElement('h3'); h.textContent = 'O que percebemos de ti';
-      const p = document.createElement('p'); p.textContent = s.profile.resumo;
+      const p = document.createElement('p'); p.textContent = pr.resumo;
       w.append(h, p); box.append(w);
     }
+    $('tryBox').classList.toggle('hidden', !pr?.primeiro_passo);
+    $('tryMain').textContent = pr?.primeiro_passo || '';
+    $('tryExtra').textContent = pr?.quick_win || '';
+    $('goal').value = s.goal || pr?.objetivo || '';
+    $('req').value = s.request || '';
+    setReq(Boolean(s.request));
+    $('followMsg').textContent = s.request || s.goal ? '✓ Guardado' : '';
     return;
   }
   show('quiz');
@@ -186,6 +195,24 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) return submit();
   const inField = e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement;
   if (!inField && /^[1-9]$/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) toggleOpt(Number(e.key) - 1);
+});
+
+function setReq(open) {
+  $('reqBox').classList.toggle('hidden', !open);
+  $('reqToggle').classList.toggle('hidden', open);
+  $('reqToggle').setAttribute('aria-expanded', String(open));
+  if (open && document.activeElement === $('reqToggle')) $('req').focus();
+}
+$('reqToggle').onclick = () => { setReq(true); $('req').focus(); };
+
+$('follow').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  $('followErr').textContent = ''; $('followMsg').textContent = ''; $('followBtn').disabled = true;
+  try {
+    const v = await api('/api/followup', { id: sessionId, goal: $('goal').value.trim(), request: $('req').value.trim() });
+    $('followMsg').textContent = v.request ? '✓ Guardado. O teu mentor vai ver o teu pedido.' : '✓ Guardado.';
+  } catch (err) { $('followErr').textContent = err.message; }
+  $('followBtn').disabled = false;
 });
 
 init();

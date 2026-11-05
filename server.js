@@ -343,7 +343,12 @@ function publicView(s) {
     reaction: s.status === 'in_progress' ? pending?.reaction || '' : '',
     question: s.status === 'in_progress' ? pending?.question : null,
     options: s.status === 'in_progress' ? pending?.options || [] : [],
-    profile: s.status === 'done' ? s.profile : null,
+    // o participante NÃO recebe as dicas/perguntas dirigidas ao mentor
+    profile: s.status === 'done' && s.profile ? {
+      resumo: s.profile.resumo, primeiro_passo: s.profile.primeiro_passo,
+      quick_win: s.profile.quick_win, objetivo: s.profile.objetivo_sugerido,
+    } : null,
+    goal: s.goal || '', request: s.request?.text || '',
   };
 }
 
@@ -435,6 +440,20 @@ async function handleApi(req, res, url) {
     return json(res, 200, publicView(s));
   }
 
+  if (m === 'POST' && pathname === '/api/followup') {
+    rateLimit(req, 20);
+    const b = await readBody(req);
+    const s = db.sessions[b.id];
+    if (!s) throw new HttpError(404, 'Sessão não encontrada.');
+    if (s.status !== 'done') throw new HttpError(400, 'Conclui primeiro o questionário.');
+    s.goal = clean(b.goal, 400);
+    const text = clean(b.request, 1000);
+    if (text !== (s.request?.text || '')) s.request = text ? { text, status: 'novo', at: new Date().toISOString() } : null;
+    s.updatedAt = new Date().toISOString();
+    await save(s);
+    return json(res, 200, publicView(s));
+  }
+
   // ----- mentor -----
   if (pathname.startsWith('/api/admin/')) {
     rateLimit(req, 120);
@@ -451,7 +470,7 @@ async function handleApi(req, res, url) {
       return json(res, 200, { total: MAX_QUESTIONS, sessions, missing });
     }
 
-    const mm = pathname.match(/^\/api\/admin\/sessions\/([a-f0-9]{32})(\/regenerate)?$/);
+    const mm = pathname.match(/^\/api\/admin\/sessions\/([a-f0-9]{32})(\/regenerate|\/resolve)?$/);
     if (mm) {
       const s = db.sessions[mm[1]];
       if (!s || !allowed.has(s.group)) throw new HttpError(404, 'Sessão não encontrada.');
@@ -459,7 +478,13 @@ async function handleApi(req, res, url) {
         delete db.sessions[s.id]; await removeSession(s.id);
         return json(res, 200, { ok: true });
       }
-      if (m === 'POST' && mm[2]) {
+      if (m === 'POST' && mm[2] === '/resolve') {
+        if (!s.request?.text) throw new HttpError(400, 'Sem pedido.');
+        s.request.status = s.request.status === 'resolvido' ? 'novo' : 'resolvido';
+        await save(s);
+        return json(res, 200, { request: s.request });
+      }
+      if (m === 'POST' && mm[2] === '/regenerate') {
         if (!s.turns.length) throw new HttpError(400, 'Sem respostas para resumir.');
         s.profile = await buildProfile(s);
         await save(s);
@@ -478,7 +503,9 @@ const server = http.createServer(async (req, res) => {
     if (req.method !== 'GET' && req.method !== 'HEAD') throw new HttpError(405, 'Método não permitido.');
 
     let rel = decodeURIComponent(url.pathname);
+    if (rel === '/admin.html') return send(res, 301, '', { Location: '/admin' });
     if (rel === '/') rel = '/index.html';
+    else if (rel === '/admin' || rel === '/admin/') rel = '/admin.html';
     const file = path.normalize(path.join(PUBLIC_DIR, rel));
     if (!file.startsWith(PUBLIC_DIR + path.sep)) throw new HttpError(403, 'Proibido.');
     let data;
