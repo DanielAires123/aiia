@@ -350,12 +350,12 @@ function publicView(s) {
 // ---------- rotas ----------
 async function handleApi(req, res, url) {
   const { pathname } = url;
-  const m = req.method;
+  const m = req.method === 'HEAD' ? 'GET' : req.method;   // monitores (UptimeRobot) usam HEAD; o Node omite o corpo
 
   if (m === 'GET' && pathname === '/api/config') {
     return json(res, 200, {
       needsCode: Boolean(INVITE_CODE),
-      groups: readRoster().groups.map((g) => ({ name: g.name, mentor: g.mentor })),   // sem nomes de pessoas
+      groups: readRoster().groups.map((g) => ({ name: g.name })),   // só nomes de grupo: pessoas e mentores só via /api/roster (com código)
       adminAll: Boolean(ADMIN_PASSWORD),
       total: MAX_QUESTIONS,
     });

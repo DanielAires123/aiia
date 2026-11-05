@@ -85,7 +85,8 @@ function renderDetail() {
 function renderFilter() {
   const box = $('filter');
   const names = cfg.groups.filter((g) => data.sessions.some((s) => s.group === g.name) || data.missing.some((m) => m.group === g.name)).map((g) => g.name);
-  $('who').textContent = groupSel === '*' ? 'Todos os grupos' : `${groupSel} · ${cfg.groups.find((g) => g.name === groupSel)?.mentor || ''}`;
+  const mentor = data.sessions.find((x) => x.group === groupSel)?.mentor;
+  $('who').textContent = groupSel === '*' ? 'Todos os grupos' : `${groupSel}${mentor ? ' · ' + mentor : ''}`;
   box.classList.toggle('hidden', names.length < 2);
   box.replaceChildren(...['*', ...names].map((n) => {
     const b = el('button', { type: 'button', className: 'pill', textContent: n === '*' ? 'Todos' : n });
