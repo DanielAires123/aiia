@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Pré-sessão de IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <div class="brand"><span class="logo" aria-hidden="true"></span>Mentoria em IA <em>· pré-sessão</em></div>
+    <div class="progress hidden" id="progress" aria-live="polite"></div>
+  </header>
+
+  <main class="stage-wrap">
+    <!-- 1. Identificação -->
+    <section id="login" class="screen">
+      <p class="eyebrow">Antes da primeira sessão</p>
+      <h1 class="display">Vamos conhecer o <em>teu dia a dia.</em></h1>
+      <p class="lede">Cerca de cinco minutos de conversa para o teu mentor preparar uma sessão feita à tua medida. Não há respostas certas ou erradas.</p>
+
+      <p class="label"><span class="num">1</span> Qual é o teu grupo?</p>
+      <div class="people" id="groupPick" role="radiogroup" aria-label="Grupo"></div>
+
+      <div id="whoBox" class="hidden">
+        <p class="label" id="whoLabel"><span class="num">2</span> Quem és tu?</p>
+        <input id="search" class="search hidden" type="search" placeholder="Procurar o teu nome…" autocomplete="off" aria-label="Procurar o teu nome">
+        <div class="people" id="people" role="radiogroup" aria-labelledby="whoLabel"></div>
+      </div>
+
+      <div id="codeRow" class="hidden">
+        <p class="label">Código de convite</p>
+        <input id="code" class="field" type="password" autocomplete="off" placeholder="Fornecido pelo teu mentor" aria-label="Código de convite">
+      </div>
+
+      <div class="cta">
+        <button id="go" class="btn" disabled>Começar
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        <span class="small">Só o teu mentor vê as respostas.</span>
+      </div>
+      <div id="loginErr" class="err" role="alert"></div>
+    </section>
+
+    <!-- 2. Questionário -->
+    <section id="quiz" class="screen hidden">
+      <div id="stage">
+        <div class="reaction hidden" id="reaction">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l1.9 5.6L19.5 9l-5.6 1.9L12 16.5l-1.9-5.6L4.5 9l5.6-1.4z"/></svg>
+          <p id="reactionText"></p>
+        </div>
+        <h2 class="display q" id="question" tabindex="-1"></h2>
+        <p class="hint" id="hint">Escolhe todas as que se aplicam.</p>
+        <div class="opts" id="opts" role="group" aria-label="Opções de resposta"></div>
+        <div class="extra">
+          <button id="toggleExtra" class="linkbtn" type="button" aria-expanded="false">+ Acrescentar com as minhas palavras</button>
+          <div id="extraBox" class="hidden">
+            <textarea id="answer" class="field" maxlength="1500" placeholder="Escreve aqui, como se estivesses a falar com o teu mentor…" aria-label="A tua resposta"></textarea>
+          </div>
+        </div>
+      </div>
+      <div id="thinking" class="thinking hidden" role="status"><span class="dots3"><i></i><i></i><i></i></span><span id="thinkTxt">A preparar a próxima pergunta, só para ti…</span></div>
+      <div id="quizErr" class="err" role="alert"></div>
+      <div class="dock">
+        <span class="small" id="kbd">Dica: usa as teclas 1–6 para escolher</span>
+        <button id="send" class="btn" disabled>Seguinte
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      </div>
+    </section>
+
+    <!-- 3. Fim -->
+    <section id="done" class="screen hidden">
+      <div class="tick" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+      <h2 class="display" id="doneTitle">Obrigado.</h2>
+      <p class="lede">As tuas respostas ficaram guardadas. O teu mentor vai usá-las para preparar a sessão contigo.</p>
+      <div id="mine"></div>
+      <p class="small" style="margin-top:28px">Já podes fechar esta página.</p>
+    </section>
+  </main>
+</div>
+<script src="/app.js"></script>
+</body>
+</html>

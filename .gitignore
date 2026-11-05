@@ -1,0 +1,4 @@
+.env
+data/responses.json
+node_modules/
+data/roster.json

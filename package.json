@@ -1,0 +1,11 @@
+{
+  "name": "aiia-pre-sessao",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Questionário adaptativo (Groq) para preparar as sessões de mentoria de IA",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": { "node": ">=20" }
+}
