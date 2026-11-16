@@ -13,47 +13,53 @@
 <body>
 <div class="shell">
   <header class="topbar">
-    <div class="brand"><img class="brand-mark" src="/skypro-symbol.svg" alt="SKYPRO" width="28" height="28">Mentoria em IA <em>· pré-sessão</em></div>
+    <div class="brand"><img class="brand-mark" src="/skypro-symbol.svg" alt="SKYPRO" width="28" height="28"><span data-i18n-html="brand">Mentoria em IA <em>· pré-sessão</em></span></div>
     <div class="progress hidden" id="progress" aria-live="polite"></div>
-    <button class="toplink hidden" id="exitBtn" type="button">Sair</button>
-    <a class="toplink" id="adminLink" href="/admin">Painel de controlo
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    <div class="top-actions">
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" class="lang-btn" data-set-lang="en" aria-pressed="false">EN</button>
+        <button type="button" class="lang-btn" data-set-lang="pt" aria-pressed="true">PT</button>
+      </div>
+      <button class="toplink hidden" id="exitBtn" type="button" data-i18n="exit">Sair</button>
+      <a class="toplink" id="adminLink" href="/admin"><span data-i18n="admin">Painel de controlo</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    </div>
   </header>
 
   <main class="stage-wrap">
     <!-- 1. Identificação -->
     <section id="login" class="screen">
-      <p class="eyebrow">Antes da primeira sessão</p>
-      <h1 class="display">Vamos conhecer o <em>teu dia a dia.</em></h1>
-      <p class="lede">Cerca de cinco minutos de conversa para o teu mentor preparar uma sessão feita à tua medida. Não há respostas certas ou erradas.</p>
+      <p class="eyebrow" data-i18n="eyebrow">Antes da primeira sessão</p>
+      <h1 class="display" data-i18n-html="hero">Vamos conhecer o <em>teu dia a dia.</em></h1>
+      <p class="lede" data-i18n="lede">Cerca de cinco minutos de conversa para o teu mentor preparar uma sessão feita à tua medida. Não há respostas certas ou erradas.</p>
 
-      <p class="notice hidden" id="doneNotice" role="status">✓ As tuas respostas já estão guardadas. Obrigado! Se precisares de alterar alguma coisa, fala com o teu mentor.</p>
+      <p class="notice hidden" id="doneNotice" role="status" data-i18n="doneNotice">✓ As tuas respostas já estão guardadas. Obrigado! Se precisares de alterar alguma coisa, fala com o teu mentor.</p>
 
       <div id="gate" class="hidden">
-        <p class="label">Código de convite</p>
-        <div class="pwwrap"><input id="code" class="field" type="password" autocomplete="off" placeholder="Fornecido pelo teu mentor" aria-label="Código de convite"><button class="eye" type="button" aria-label="Mostrar" aria-pressed="false" title="Mostrar / esconder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="slash" d="M4 4l16 16"/></svg></button></div>
+        <p class="label" data-i18n="inviteLabel">Código de convite</p>
+        <div class="pwwrap"><input id="code" class="field" type="password" autocomplete="off" data-i18n-placeholder="invitePh" data-i18n-aria="inviteLabel" placeholder="Fornecido pelo teu mentor" aria-label="Código de convite"><button class="eye" type="button" aria-label="Mostrar" aria-pressed="false" title="Mostrar / esconder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="slash" d="M4 4l16 16"/></svg></button></div>
         <div class="cta">
-          <button id="gateBtn" class="btn" type="button">Continuar
+          <button id="gateBtn" class="btn" type="button"><span data-i18n="continue">Continuar</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
         </div>
         <div id="gateErr" class="err" role="alert"></div>
       </div>
 
       <div id="picker">
-      <p class="label"><span class="num">1</span> Qual é o teu grupo?</p>
-      <div class="people" id="groupPick" role="radiogroup" aria-label="Grupo"></div>
+      <p class="label" data-i18n-html="groupLabel"><span class="num">1</span> Qual é o teu grupo?</p>
+      <div class="people" id="groupPick" role="radiogroup" data-i18n-aria="groupAria" aria-label="Grupo"></div>
 
       <div id="whoBox" class="hidden">
-        <p class="label" id="whoLabel"><span class="num">2</span> Quem és tu?</p>
-        <input id="search" class="search hidden" type="search" placeholder="Procurar o teu nome…" autocomplete="off" aria-label="Procurar o teu nome">
+        <p class="label" id="whoLabel" data-i18n-html="whoLabel"><span class="num">2</span> Quem és tu?</p>
+        <input id="search" class="search hidden" type="search" data-i18n-placeholder="searchPh" data-i18n-aria="searchPh" placeholder="Procurar o teu nome…" autocomplete="off" aria-label="Procurar o teu nome">
         <div class="people" id="people" role="radiogroup" aria-labelledby="whoLabel"></div>
-        <p class="small hidden" id="doneHint" style="margin-top:12px">Os nomes marcados com ✓ já responderam. Se precisares de alterar algo, fala com o teu mentor.</p>
+        <p class="small hidden" id="doneHint" style="margin-top:12px" data-i18n="doneHint">Os nomes marcados com ✓ já responderam. Se precisares de alterar algo, fala com o teu mentor.</p>
       </div>
 
       <div class="cta">
-        <button id="go" class="btn" disabled>Começar
+        <button id="go" class="btn" disabled><span data-i18n="start">Começar</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
-        <span class="small">Só o teu mentor vê as respostas.</span>
+        <span class="small" data-i18n="privacy">Só o teu mentor vê as respostas.</span>
       </div>
       <div id="loginErr" class="err" role="alert"></div>
       </div>
@@ -67,20 +73,20 @@
           <p id="reactionText"></p>
         </div>
         <h2 class="display q" id="question" tabindex="-1"></h2>
-        <p class="hint" id="hint">Escolhe todas as que se aplicam.</p>
-        <div class="opts" id="opts" role="group" aria-label="Opções de resposta"></div>
+        <p class="hint" id="hint" data-i18n="hint">Escolhe todas as que se aplicam.</p>
+        <div class="opts" id="opts" role="group" data-i18n-aria="optsAria" aria-label="Opções de resposta"></div>
         <div class="extra">
-          <button id="toggleExtra" class="linkbtn" type="button" aria-expanded="false">+ Acrescentar com as minhas palavras</button>
+          <button id="toggleExtra" class="linkbtn" type="button" aria-expanded="false" data-i18n="toggleExtra">+ Acrescentar com as minhas palavras</button>
           <div id="extraBox" class="hidden">
-            <textarea id="answer" class="field" maxlength="1500" placeholder="Escreve aqui, como se estivesses a falar com o teu mentor…" aria-label="A tua resposta"></textarea>
+            <textarea id="answer" class="field" maxlength="1500" data-i18n-placeholder="answerPh" data-i18n-aria="answerAria" placeholder="Escreve aqui, como se estivesses a falar com o teu mentor…" aria-label="A tua resposta"></textarea>
           </div>
         </div>
       </div>
-      <div id="thinking" class="thinking hidden" role="status"><span class="dots3"><i></i><i></i><i></i></span><span id="thinkTxt">A preparar a próxima pergunta, só para ti…</span></div>
+      <div id="thinking" class="thinking hidden" role="status"><span class="dots3"><i></i><i></i><i></i></span><span id="thinkTxt" data-i18n="thinking">A preparar a próxima pergunta, só para ti…</span></div>
       <div id="quizErr" class="err" role="alert"></div>
       <div class="dock">
-        <span class="small" id="kbd">Dica: usa as teclas 1–6 para escolher</span>
-        <button id="send" class="btn" disabled>Seguinte
+        <span class="small" id="kbd" data-i18n="kbd">Dica: usa as teclas 1–6 para escolher</span>
+        <button id="send" class="btn" disabled><span data-i18n="next">Seguinte</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
       </div>
     </section>
@@ -90,30 +96,30 @@
       <div class="done-a">
         <div class="tick" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
         <h2 class="display" id="doneTitle">Obrigado.</h2>
-        <p class="lede">As tuas respostas ficaram guardadas. O teu mentor vai usá-las para preparar a sessão contigo.</p>
+        <p class="lede" data-i18n="doneLede">As tuas respostas ficaram guardadas. O teu mentor vai usá-las para preparar a sessão contigo.</p>
         <div id="mine"></div>
       </div>
       <div class="done-b">
         <form class="panel" id="follow">
           <section class="blk try hidden" id="tryBox">
-            <h3>Para experimentar esta semana</h3>
+            <h3 data-i18n="tryTitle">Para experimentar esta semana</h3>
             <p class="strong" id="tryMain"></p>
             <p class="muted" id="tryExtra"></p>
           </section>
           <section class="blk">
-            <label for="goal">O teu objetivo para o ano</label>
+            <label for="goal" data-i18n="goalLabel">O teu objetivo para o ano</label>
             <textarea id="goal" class="field" rows="2" maxlength="400"></textarea>
           </section>
           <section class="blk">
-            <button class="linkbtn" id="reqToggle" type="button" aria-expanded="false">+ Tenho um pedido para o meu mentor</button>
+            <button class="linkbtn" id="reqToggle" type="button" aria-expanded="false" data-i18n="reqToggle">+ Tenho um pedido para o meu mentor</button>
             <div id="reqBox" class="hidden">
-              <label for="req">O que precisas?</label>
-              <textarea id="req" class="field" rows="3" maxlength="1000" placeholder="Uma dúvida, acesso a uma ferramenta, um processo que queres analisar…"></textarea>
+              <label for="req" data-i18n="reqLabel">O que precisas?</label>
+              <textarea id="req" class="field" rows="3" maxlength="1000" data-i18n-placeholder="reqPh" placeholder="Uma dúvida, acesso a uma ferramenta, um processo que queres analisar…"></textarea>
             </div>
           </section>
           <div class="cta">
-            <button class="btn" id="followBtn" type="submit">Guardar</button>
-            <button class="linkbtn hidden" id="cancelEdit" type="button">Cancelar</button>
+            <button class="btn" id="followBtn" type="submit" data-i18n="save">Guardar</button>
+            <button class="linkbtn hidden" id="cancelEdit" type="button" data-i18n="cancel">Cancelar</button>
             <span id="followMsg" class="small" role="status"></span>
           </div>
           <div id="followErr" class="err" role="alert"></div>

@@ -181,9 +181,37 @@ function transcript(s, { compact = false } = {}) {
   }).join('\n\n');
 }
 
+const normalizeLang = (v) => (String(v || '').toLowerCase() === 'en' ? 'en' : 'pt');
+const langLabel = (lang) => (lang === 'en' ? 'English' : 'português de Portugal');
+
+function firstQuestion(name, lang) {
+  const first = name.split(' ')[0];
+  if (lang === 'en') {
+    return {
+      question: `Hi, ${first}! To start: what is your area or role in the company, and what does your day-to-day work look like?`,
+      reaction: '',
+      options: [
+        { emoji: '📣', label: 'Marketing' }, { emoji: '🤝', label: 'Sales / Commercial' },
+        { emoji: '💶', label: 'Finance / Admin' }, { emoji: '🗂️', label: 'Operations / Projects' },
+        { emoji: '💻', label: 'Tech / Development' }, { emoji: '👥', label: 'People / HR' },
+      ],
+    };
+  }
+  return {
+    question: `Olá, ${first}! Para começar: qual é a tua área ou função na empresa, e em que consiste o teu trabalho no dia a dia?`,
+    reaction: '',
+    options: [
+      { emoji: '📣', label: 'Marketing' }, { emoji: '🤝', label: 'Comercial / Vendas' },
+      { emoji: '💶', label: 'Financeiro / Administrativo' }, { emoji: '🗂️', label: 'Operações / Projetos' },
+      { emoji: '💻', label: 'Tecnologia / Desenvolvimento' }, { emoji: '👥', label: 'Pessoas / RH' },
+    ],
+  };
+}
+
 async function nextQuestion(s) {
   const answered = s.turns.length;
   const remaining = MAX_QUESTIONS - answered;
+  const lang = normalizeLang(s.lang);
   const stages = [
     'o dia a dia: que tarefas ocupam mais tempo numa semana típica',
     'tarefas repetitivas ou demoradas e como as fazem hoje (processo, ferramentas)',
@@ -192,20 +220,24 @@ async function nextQuestion(s) {
     'um processo concreto que talvez nem devesse existir ou pudesse ser simplificado',
     'o objetivo de melhoria que gostariam de alcançar ao longo do ano',
   ];
+  const noneOpt = lang === 'en' ? 'None / not yet' : 'Nenhuma / ainda não';
+  const personalEx = lang === 'en'
+    ? 'e.g. "You mentioned monthly campaign reports…"'
+    : 'ex.: "Falaste em relatórios mensais de campanhas…"';
   const system = `${CONTEXT}
 
-Estás a conduzir um pequeno questionário de pré-sessão em português de Portugal, tom simpático e direto, sem jargão.
-Regras:
-- A pergunta tem de ser PESSOAL: trata a pessoa pelo primeiro nome (${s.name.split(' ')[0]}) de vez em quando, e liga-a diretamente ao que ela acabou de dizer, usando as palavras, ferramentas, tarefas e exemplos concretos que ela mencionou (ex.: "Falaste em relatórios mensais de campanhas…"). Nunca faças uma pergunta genérica que serviria a qualquer pessoa.
-- Faz UMA pergunta de cada vez, curta (máx. 2 frases), adaptada à área/função e ao contexto dela.
-- "reacao": uma frase muito curta (máx. 20 palavras), calorosa e natural, que mostre que percebeste a resposta anterior (sem elogios exagerados nem repetir a resposta palavra por palavra).
-- "options": 4 a 6 opções de resposta rápida, ESPECÍFICAS para esta pessoa, derivadas do que ela disse e da sua área (não genéricas). A pessoa pode escolher várias e acrescentar texto livre. Cada opção tem um "emoji" (1 emoji adequado) e um "label" curto (máx. 6 palavras). Inclui sempre, quando fizer sentido, uma opção de saída como "Nenhuma / ainda não".
-- Não repitas temas já respondidos. Não peças dados pessoais, dados de clientes ou informação confidencial.
-- Faltam ${remaining} pergunta(s) incluindo esta. Percorre, por ordem aproximada, os temas: ${stages.join(' | ')}. Se faltarem poucas perguntas, prioriza o que ainda não foi coberto. Na última pergunta, ajuda a pessoa a definir o seu objetivo do ano com base no que disse.
-Responde APENAS com JSON: {"reacao": "...", "question": "...", "options": [{"emoji": "📊", "label": "..."}]}`;
+You are running a short pre-session questionnaire in ${langLabel(lang)}. Tone: friendly, direct, no jargon. Write question, reaction, and option labels entirely in ${langLabel(lang)}.
+Rules:
+- The question must be PERSONAL: address the person by first name (${s.name.split(' ')[0]}) now and then, and tie it directly to what they just said, using the words, tools, tasks and concrete examples they mentioned (${personalEx}). Never ask a generic question that would work for anyone.
+- Ask ONE question at a time, short (max 2 sentences), adapted to their area/role and context.
+- "reacao": a very short phrase (max 20 words), warm and natural, showing you understood the previous answer (no overpraise, don't repeat the answer word for word).
+- "options": 4 to 6 quick-answer options, SPECIFIC to this person, derived from what they said and their area (not generic). They can pick several and add free text. Each option has one fitting "emoji" and a short "label" (max 6 words). Always include, when it makes sense, an exit option like "${noneOpt}".
+- Do not repeat themes already answered. Do not ask for personal data, client data or confidential information.
+- ${remaining} question(s) left including this one. Cover roughly in order: ${stages.join(' | ')}. If few remain, prioritize what is still uncovered. On the last question, help them define their year goal based on what they said.
+Reply ONLY with JSON: {"reacao": "...", "question": "...", "options": [{"emoji": "📊", "label": "..."}]}`;
   const out = await groq([
     { role: 'system', content: system },
-    { role: 'user', content: `Nome: ${s.name}\n\nConversa até agora:\n${transcript(s, { compact: true })}\n\nEscreve a reação e a próxima pergunta.` },
+    { role: 'user', content: `Name: ${s.name}\n\nConversation so far:\n${transcript(s, { compact: true })}\n\nWrite the reaction and the next question in ${langLabel(lang)}.` },
   ], { temperature: 0.7, max_tokens: 500 });
   const question = String(out.question || '').trim().slice(0, 400);
   if (!question) throw new HttpError(502, 'A IA não devolveu pergunta. Tenta novamente.');
@@ -217,9 +249,11 @@ Responde APENAS com JSON: {"reacao": "...", "question": "...", "options": [{"emo
 }
 
 async function buildProfile(s) {
+  const lang = normalizeLang(s.lang);
+  // Participant-facing fields follow session lang; mentor tips stay PT (admin is PT-only).
   const system = `${CONTEXT}
 
-Com base nas respostas, escreve um perfil útil para o mentor, em português de Portugal. Sê factual: só o que a pessoa disse, sem inventar. Responde APENAS com JSON com estes campos:
+Com base nas respostas, escreve um perfil útil para o mentor. Campos vistos pelo participante (resumo, quick_win, objetivo_sugerido, primeiro_passo) em ${langLabel(lang)}; os restantes campos (dicas_mentor, perguntas_sessao, etc.) em português de Portugal. Sê factual: só o que a pessoa disse, sem inventar. Responde APENAS com JSON com estes campos:
 {
  "area": "área/função em poucas palavras",
  "resumo_curto": "uma única frase (máx. 140 caracteres) a descrever a pessoa para o mentor ver de relance",
@@ -455,23 +489,22 @@ async function handleApi(req, res, url) {
     const group = readRoster().groups.find((g) => g.name === b.group);
     const name = clean(b.name, 80);
     if (!group || !group.members.includes(name)) throw new HttpError(400, 'Seleciona o teu grupo e o teu nome.');
+    const lang = normalizeLang(b.lang);
     let s = Object.values(db.sessions).find((x) => x.name === name && x.group === group.name);
     if (s && s.status === 'done' && b.id !== s.id) throw new HttpError(409, 'Esta pessoa já respondeu. Se precisares de alterar alguma coisa, fala com o teu mentor.');
     if (!s) {
       s = {
         id: crypto.randomBytes(16).toString('hex'), name, group: group.name, mentor: group.mentor,
-        status: 'in_progress', startedAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
-        turns: [], pending: {
-          question: 'Olá, ' + name.split(' ')[0] + '! Para começar: qual é a tua área ou função na empresa, e em que consiste o teu trabalho no dia a dia?',
-          reaction: '',
-          options: [
-            { emoji: '📣', label: 'Marketing' }, { emoji: '🤝', label: 'Comercial / Vendas' },
-            { emoji: '💶', label: 'Financeiro / Administrativo' }, { emoji: '🗂️', label: 'Operações / Projetos' },
-            { emoji: '💻', label: 'Tecnologia / Desenvolvimento' }, { emoji: '👥', label: 'Pessoas / RH' },
-          ],
-        }, profile: null,
+        status: 'in_progress', lang, startedAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+        turns: [], pending: firstQuestion(name, lang), profile: null,
       };
       db.sessions[s.id] = s;
+      await save(s);
+    } else if (normalizeLang(s.lang) !== lang) {
+      s.lang = lang;
+      // No answers yet → swap the canned first question; otherwise keep current pending.
+      if (!s.turns.length && s.status === 'in_progress') s.pending = firstQuestion(name, lang);
+      s.updatedAt = new Date().toISOString();
       await save(s);
     }
     return json(res, 200, publicView(s));
@@ -489,6 +522,7 @@ async function handleApi(req, res, url) {
     const s = db.sessions[b.id];
     if (!s) throw new HttpError(404, 'Sessão não encontrada.');
     if (s.status !== 'in_progress' || !s.pending) return json(res, 200, publicView(s));
+    if (b.lang != null) s.lang = normalizeLang(b.lang);
     const allowed = new Set((s.pending.options || []).map((o) => (typeof o === 'string' ? o : o.label)));
     const picks = (Array.isArray(b.picks) ? b.picks : []).map((p) => clean(p, 80)).filter((p) => allowed.has(p)).slice(0, 8);
     const extra = clean(b.answer, 1500);
