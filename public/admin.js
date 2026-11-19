@@ -348,7 +348,8 @@ function paneSemana(pane, s) {
   const inp = el('input', { placeholder: 'O que fica combinado para entregar…', maxLength: 300, attrs: { 'aria-label': 'Novo compromisso' } });
   const add = el('button', { type: 'button', className: 'primary', textContent: 'Adicionar' });
   const go = () => inp.value.trim() ? sessPost(s, 'commitments', { op: 'add', item: { text: inp.value } }) : toast('Escreve o compromisso', true);
-  add.onclick = go; inp.onkeydown = (e) => e.key === 'Enter' && go();
+  add.onclick = go;
+  inp.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); go(); } };
   pane.append(el('div', { className: 'addrow' }, inp, add));
   if (!cm.length) pane.append(T('p', 'empty', 'Sem compromissos. No fim de cada sessão regista aqui o que a pessoa se compromete a entregar.'));
   for (const c of [...open, ...closed]) {
@@ -390,7 +391,8 @@ function paneProcessos(pane, s) {
   const inp = el('input', { maxLength: 160, placeholder: 'Ex.: Follow-up de propostas' });
   const add = el('button', { type: 'button', className: 'primary', textContent: 'Adicionar' });
   const go = () => inp.value.trim() ? sessPost(s, 'processes', { op: 'add', item: { name: inp.value } }) : (inp.focus(), toast('Escreve o nome do processo', true));
-  add.onclick = go; inp.onkeydown = (e) => e.key === 'Enter' && go();
+  add.onclick = go;
+  inp.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); go(); } };
   pane.append(section('Adicionar processos', null, el('div', { className: 'acards' },
     el('div', { className: 'acard' }, T('h4', '', 'Das respostas da pessoa'),
       T('p', 'desc', total ? `A IA encontrou ${total} ${total === 1 ? 'tarefa repetitiva' : 'tarefas repetitivas'} no questionário. Importa-as para as reveres uma a uma.` : 'A IA não encontrou tarefas repetitivas no questionário.'), el('div', { className: 'row' }, imp)),
